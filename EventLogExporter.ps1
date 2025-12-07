@@ -1,22 +1,11 @@
-# --- Base64 helper ---
-$dec = { param($s) [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($s)) }
-
-# --- Administrator check ---
-$T1 = &$dec 'U2VjdXJpdHkuUHJpbmNpcGFsLldpbmRvd3NQcmluY2lwYWw='
-$T2 = &$dec 'U2VjdXJpdHkuUHJpbmNpcGFsLldpbmRvd3NJZGVudGl0eQ=='
-$T3 = &$dec 'U2VjdXJpdHkuUHJpbmNpcGFsLldpbmRvd3NCdWlsdEluUm9sZQ=='
-
-$principal = New-Object ($T1) ([Type]::GetType($T2)::GetCurrent())
-$adminRole = [Enum]::Parse([Type]$T3,'Administrator')
-
-if (-not $principal.IsInRole($adminRole)) {
-    Write-Host (&$dec 'WW91IGhhdmUgdG8gcnVuIGFzIGFkbWluaXN0cmF0b3I=') -ForegroundColor Red
-    Write-Host (&$dec 'UmVjaHRza2xpY2sgLSBSdW4gYXMgQWRtaW5pc3RyYXRvcg==')
-    Pause
+# Checking administrator permissions
+if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Host "You have to run as administrator" -ForegroundColor Red
+    Write-Host "Rechtsklick -> Run as administrator"
+    pause
     exit
 }
 
-# --- Banner ---
 $banner = @'
  █████╗ ████████╗██╗  ██╗███████╗██╗  ██╗
 ██╔══██╗╚══██╔══╝██║  ██║██╔════╝╚██╗██╔╝
@@ -26,64 +15,71 @@ $banner = @'
 ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
 '@
 
-$colors = @(
-    &$dec 'Qmx1ZQ==',
-    &$dec 'Q3lhbg==',
-    &$dec 'TWFnZW50YQ==',
-    &$dec 'RGFya01hZ2VudGE='
-)
+# Simulierter Farbverlauf (blau → lila)
+$colors = @("Blue", "Cyan", "Magenta", "DarkMagenta")
 
 $lines = $banner -split "`n"
-for ($i=0; $i -lt $lines.Count; $i++) {
-    $ci = [Math]::Min([int]($i/2), $colors.Count-1)
-    Write-Host $lines[$i] -ForegroundColor $colors[$ci]
+for ($i = 0; $i -lt $lines.Length; $i++) {
+    $color = $colors[ [Math]::Min([int]($i / 2), $colors.Count - 1) ]
+    Write-Host $lines[$i] -ForegroundColor $color
 }
 
-Write-Host (&$dec '4pqgIEEgVCBIIEUgWCDimqA=') -ForegroundColor Magenta
-Start-Sleep -Milliseconds 1000
+Write-Host "                 ⚡ A T H E X ⚡" -ForegroundColor Magenta
+Start-Sleep -Milliseconds 3000
 
-# --- Config ---
-$output = "events_{0}.csv" -f (Get-Date -Format 'yyyyMMdd_HHmm')
-$start = (Get-Date).AddDays(-3)
+# Configuration
+$outputFile = "events_$(Get-Date -Format 'yyyyMMdd_HHmm').csv"
+$daysBack = 3
+$startTime = (Get-Date).AddDays(-$daysBack)
 
-# --- Event export ---
+# Event export function
 function Get-FastEvents {
-    param([string]$ln, [int[]]$ids)
-
-    $flt = @{ LogName=$ln; ID=$ids; StartTime=$start }
-
+    param (
+        [string]$logName,
+        [int[]]$eventIDs
+    )
+    
+    $filter = @{
+        LogName = $logName
+        ID = $eventIDs
+        StartTime = $startTime
+    }
+    
     try {
-        $ev = Get-WinEvent -FilterHashtable $flt -MaxEvents 1000 -ErrorAction Stop
-        Write-Host ("{0}: {1} events" -f $ln,$ev.Count) -ForegroundColor Green
-
-        foreach ($e in $ev) {
+        $events = Get-WinEvent -FilterHashtable $filter -ErrorAction Stop -MaxEvents 1000
+        $count = $events.Count
+        Write-Host ("{0}: {1} events" -f $logName, $count) -ForegroundColor Green
+        
+        foreach ($event in $events) {
             [PSCustomObject]@{
-                Data    = $e.TimeCreated.ToString("yyyy-MM-dd")
-                Godzina = $e.TimeCreated.ToString("HH:mm:ss")
-                Zrodlo  = $e.ProviderName
-                ID      = $e.Id
-                Opis    = ($e.Message -replace "`r`n"," " -replace ",",";")
+                Data = $event.TimeCreated.ToString("yyyy-MM-dd")
+                Godzina = $event.TimeCreated.ToString("HH:mm:ss")
+                Zrodlo = $event.ProviderName
+                ID = $event.Id
+                Opis = ($event.Message -replace "`r`n", " " -replace ",", ";")
             }
         }
     }
     catch {
-        Write-Host ("{0}: NO ACCESS" -f $ln) -ForegroundColor Red
+        Write-Host ("{0}: NO ACCESS" -f $logName) -ForegroundColor Red
     }
 }
 
-Write-Host (&$dec 'U1RBUlRJTkcgVEhFIEVWRU5UIEVYUE9SVC4uLg==') -ForegroundColor Cyan
-$sw=[Diagnostics.Stopwatch]::StartNew()
+# Main part
+Write-Host "`nSTARTING THE EVENT EXPORT..." -ForegroundColor Cyan
 
-$r=@()
-$r+=Get-FastEvents Security @(4616,1102,1100,4634)
-$r+=Get-FastEvents Application @(1000,3079)
-$r+=Get-FastEvents System @(7034,104)
+$timer = [System.Diagnostics.Stopwatch]::StartNew()
 
-$r | Export-Csv -Path $output -Encoding UTF8 -NoTypeInformation
+# Event collection
+$results = @()
+$results += Get-FastEvents -logName "Security" -eventIDs @(4616,1102,1100,4634)
+$results += Get-FastEvents -logName "Application" -eventIDs @(1000,3079)
+$results += Get-FastEvents -logName "System" -eventIDs @(7034,104)
 
-$sw.Stop()
-Write-Host ("COMPLETED IN {0}s" -f $sw.Elapsed.TotalSeconds.ToString('0.00')) -ForegroundColor Cyan
-Write-Host ("Output: {0}" -f (Resolve-Path $output)) -ForegroundColor Yellow
+$results | Export-Csv -Path $outputFile -Encoding UTF8 -NoTypeInformation -Delimiter ","
 
-Write-Host "Press any key..."
+$timer.Stop()
+Write-Host "`nCOMPLETED IN $($timer.Elapsed.TotalSeconds.ToString('0.00')) s" -ForegroundColor Cyan
+Write-Host "Output file: $((Get-Item $outputFile).FullName)" -ForegroundColor Yellow
+Write-Host "`nPress any key to exit..."
 [Console]::ReadKey($true) | Out-Null
