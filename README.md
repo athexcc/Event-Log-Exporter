@@ -41,7 +41,7 @@ Date,Time,Source,ID,Description
 "2025-10-10","14:25:01","Application Error","1000","Application chrome.exe crashed"
 
 Output file name example:
-* Zdarzenia_20251012_1430.csv
+* Result_20251012_1430.csv
 
 
 5️⃣ Execution Summary
@@ -53,7 +53,7 @@ Application: 42 events
 System: 15 events
 
 COMPLETED IN 1.94 s
-Output file: C:\Users\Admin\Desktop\Zdarzenia_20251012_1430.csv
+Output file: C:\Users\Admin\Desktop\Result_20251012_1430.csv
 
 ⚙️ Usage
 🧩 Steps
