@@ -66,7 +66,7 @@ Output file: C:\Users\Admin\Desktop\Result_20251012_1430.csv
 ### ⚠️ Run as Administrator  
 #### Simple Launcher 
 ```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass; Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/athexcc/Event-Log-Exporter/refs/heads/main/EventLogExporter.ps1')
+iex (iwr 'https://raw.githubusercontent.com/athexcc/Event-Log-Exporter/main/EventLogExporter.ps1').Content
 ```
 
 This code was rewritten & translated.
