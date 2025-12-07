@@ -1,16 +1,19 @@
-# --- Administrator Check ---
-if (-NOT ([Security.Principal.WindowsPrincipal]
-    [Security.Principal.WindowsIdentity]::GetCurrent()
-).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
 
-    Write-Host ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('WW91IGhhdmUgdG8gcnVuIGFzIGFkbWluaXN0cmF0b3I='))) -ForegroundColor Red
-    Write-Host ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('UmVjaHRza2xpY2sg4oaSIFJ1biBhcyBhZG1pbmlzdHJhdG9y'))) -ForegroundColor Yellow
-    Pause
-    Exit
+$y=([Text.Encoding]::UTF8.GetString);$b=[Convert]::FromBase64String
+$A=($y.Invoke($b.Invoke('U2VjdXJpdHkuUHJpbmNpcGFsLldpbmRvd3NQcmluY2lwYWw=')))
+$B=($y.Invoke($b.Invoke('U2VjdXJpdHkuUHJpbmNpcGFsLldpbmRvd3NJZGVudGl0eQ==')))
+$C=($y.Invoke($b.Invoke('U2VjdXJpdHkuUHJpbmNpcGFsLldpbmRvd3NCdWlsdEluUm9sZQ==')))
+
+if(-not ((New-Object ($A) ([$B]::GetCurrent())).IsInRole([Enum]::Parse([Type]$C,'Administrator')))) {
+    Write-Host ($y.Invoke($b.Invoke('WW91IGhhdmUgdG8gcnVuIGFzIGFkbWluaXN0cmF0b3I='))) -ForegroundColor Red
+    Write-Host ($y.Invoke($b.Invoke('UmVjaHRza2xpY2sgLSBSdW4gYXMgQWRtaW5pc3RyYXRvcg==')))
+    pause
+    exit
 }
 
-# --- Banner ---
-$banner = @'
+
+$bn=$y.Invoke($b.Invoke('IFvQk5BSU4gSEVSRQ==')) # Placeholder (nothing visible)
+$bn=@'
  █████╗ ████████╗██╗  ██╗███████╗██╗  ██╗
 ██╔══██╗╚══██╔══╝██║  ██║██╔════╝╚██╗██╔╝
 ███████║   ██║   ███████║█████╗   ╚███╔╝ 
@@ -19,69 +22,66 @@ $banner = @'
 ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
 '@
 
-$colors = @(([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('Qmx1ZQ=='))), ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('Q3lhbg=='))), ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('TWFnZW50YQ=='))), ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('RGFya01hZ2VudGE='))))
-$lines = $banner -split ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('YG4=')))
+$cl=@(
+ $y.Invoke($b.Invoke('Qmx1ZQ==')),
+ $y.Invoke($b.Invoke('Q3lhbg==')),
+ $y.Invoke($b.Invoke('TWFnZW50YQ==')),
+ $y.Invoke($b.Invoke('RGFya01hZ2VudGE='))
+)
 
-for ($i = 0; $i -lt $lines.Count; $i++) {
-    $colorIndex = [Math]::Min([int]($i / 2), $colors.Count - 1)
-    Write-Host $lines[$i] -ForegroundColor $colors[$colorIndex]
+$l=$bn -split "`n"
+0..($l.Count-1) | ForEach-Object {
+    $ci=[Math]::Min([int]($_/2),$cl.Count-1)
+    Write-Host $l[$_] -ForegroundColor $cl[$ci]
 }
 
-Write-Host ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('ICAgICAgICAgICAgICAgICDimqEgQSBUIEggRSBYIOKaoQ=='))) -ForegroundColor Magenta
-Start-Sleep -Milliseconds 1200
+Write-Host ($y.Invoke($b.Invoke('4pqgIEEgVCBIIEUgWCDimqA='))) -ForegroundColor Magenta
+Start-Sleep -Milliseconds 3000
 
-# --- Configuration ---
-$outputFile = (([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('ZXZlbnRzXw=='))) + $(Get-Date -Format 'yyyyMMdd_HHmm') + ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('LmNzdg=='))))
-$daysBack = 3
-$startTime = (Get-Date).AddDays(-$daysBack)
 
-# --- Function: Fast event export ---
+$of="events_{0}.csv" -f (Get-Date -Format "yyyyMMdd_HHmm")
+$ds=3
+$st=(Get-Date).AddDays(-$ds)
+
+# --- Function (obfuscated) ---
 function Get-FastEvents {
-    param (
-        [string]$logName,
-        [int[]]$eventIDs
-    )
+ param([string]$ln,[int[]]$ids)
 
-    $filter = @{
-        LogName   = $logName
-        ID        = $eventIDs
-        StartTime = $startTime
-    }
+ $flt=@{LogName=$ln;ID=$ids;StartTime=$st}
 
-    try {
-        $events = Get-WinEvent -FilterHashtable $filter -ErrorAction Stop -MaxEvents 1000
-        Write-Host (([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('ezB9OiB7MX0gZXZlbnRz'))) -f $logName, $events.Count) -ForegroundColor Green
+ try{
+   $ev=Get-WinEvent -FilterHashtable $flt -MaxEvents 1000 -ErrorAction Stop
+   Write-Host ("{0}: {1} events" -f $ln,$ev.Count) -ForegroundColor Green
 
-        foreach ($event in $events) {
-            [PSCustomObject]@{
-                Data    = $event.TimeCreated.ToString(([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('eXl5eS1NTS1kZA=='))))
-                Godzina = $event.TimeCreated.ToString(([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('SEg6bW06c3M='))))
-                Zrodlo  = $event.ProviderName
-                ID      = $event.Id
-                Opis    = ($event.Message -replace ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('YHJgbg=='))), ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('IA=='))) -replace ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('LA=='))), ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('Ow=='))))
-            }
-        }
-    }
-    catch {
-        Write-Host (([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('ezB9OiBOTyBBQ0NFU1M='))) -f $logName) -ForegroundColor Red
-    }
+   foreach($e in $ev){
+      [PSCustomObject]@{
+        Data=$e.TimeCreated.ToString("yyyy-MM-dd")
+        Godzina=$e.TimeCreated.ToString("HH:mm:ss")
+        Zrodlo=$e.ProviderName
+        ID=$e.Id
+        Opis=($e.Message -replace "`r`n"," " -replace ",",";")
+      }
+   }
+ }
+ catch{
+   Write-Host ("{0}: NO ACCESS" -f $ln) -ForegroundColor Red
+ }
 }
 
-# --- Main ---
-Write-Host ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('YG5TVEFSVElORyBUSEUgRVZFTlQgRVhQT1JULi4u'))) -ForegroundColor Cyan
-$timer = [System.Diagnostics.Stopwatch]::StartNew()
 
-$results = @()
-$results += Get-FastEvents -logName ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('U2VjdXJpdHk=')))     -eventIDs @(4616,1102,1100,4634)
-$results += Get-FastEvents -logName ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('QXBwbGljYXRpb24=')))  -eventIDs @(1000,3079)
-$results += Get-FastEvents -logName ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('U3lzdGVt')))       -eventIDs @(7034,104)
+Write-Host ($y.Invoke($b.Invoke('U1RBUlRJTkcgVEhFIEVWRU5UIEVYUE9SVC4uLg=='))) -ForegroundColor Cyan
+$t=[Diagnostics.Stopwatch]::StartNew()
 
-# --- CSV Export ---
-$results | Export-Csv -Path $outputFile -Encoding UTF8 -NoTypeInformation -Delimiter ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('LA==')))
+$r=@()
+$r+=Get-FastEvents -ln "Security" -ids @(4616,1102,1100,4634)
+$r+=Get-FastEvents -ln "Application" -ids @(1000,3079)
+$r+=Get-FastEvents -ln "System" -ids @(7034,104)
 
-$timer.Stop()
+$r | Export-Csv -Path $of -Encoding UTF8 -NoTypeInformation
 
-Write-Host (([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('YG5DT01QTEVURUQgSU4g'))) + $($timer.Elapsed.TotalSeconds.ToString('0.00') + ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('KSBz')))) -ForegroundColor Cyan)
-Write-Host (([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('T3V0cHV0IGZpbGU6IA=='))) + $((Get-Item $outputFile) + ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('LkZ1bGxOYW1lKQ==')))) -ForegroundColor Yellow)
-Write-Host ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('YG5QcmVzcyBhbnkga2V5IHRvIGV4aXQuLi4=')))
+$t.Stop()
+Write-Host ("COMPLETED IN {0}s" -f $t.Elapsed.TotalSeconds.ToString("0.00")) -ForegroundColor Cyan
+Write-Host ("Output: {0}" -f (Resolve-Path $of)) -ForegroundColor Yellow
+
+Write-Host "Press any key..."
 [Console]::ReadKey($true) | Out-Null
